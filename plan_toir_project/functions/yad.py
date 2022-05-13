@@ -20,7 +20,7 @@ def get_file(file_name):
     print("не получилось get_file", e)
 
 # get_file("maintanance_jobs_df.csv")
-# get_file("full_eo_list_actual.csv")
+get_file("full_eo_list_actual.csv")
 
 def delete_file(file_path):
   try:
@@ -28,3 +28,14 @@ def delete_file(file_path):
     print("Файл ", file_path, " удален")
   except Exception as e:
     print("Не удалось удалить файл", e)
+
+
+def upload_file(file_path, file_name):
+  try:
+    y.upload(file_path, file_name, overwrite = True)
+    print("Файл ", file_name, " успешно выгружен")
+  except Exception as e:
+    print('не получилось upload_file ', file_name, " Ошибка: ", e)
+
+
+# upload_file('temp_files/full_eo_list_actual.csv', 'full_eo_list_actual.csv')
