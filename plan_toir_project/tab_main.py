@@ -17,6 +17,7 @@ def main_tab():
             dbc.Row([
                 dbc.Col(
                     children=[
+                    
                       dcc.Loading(id='loading_settings_1', parent_style=loading_style),
                       # html.Div([
                       #       html.P(),          
@@ -57,6 +58,7 @@ def main_tab():
                           # html.Div(id='output-data-3'),
                           # html.P(id='output-data-4'),
                         ]),
+                      html.P("interval_between_overhaul в имени файла для загрузки межремонтного интервала компонентов"),
 
 
                     ])
