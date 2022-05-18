@@ -7,6 +7,7 @@ import base64
 import io
 import pandas as pd
 import tab_main
+import functions
 
 # select the Bootstrap stylesheet2 and figure template2 for the theme toggle here:
 # template_theme1 = "sketchy"
@@ -120,6 +121,7 @@ def parse_contents(contents, filename):
         'There was an error processing this file.'
     ])
 
+  
   return html.Div([
       html.H5(filename),
       dash_table.DataTable(
