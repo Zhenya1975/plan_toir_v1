@@ -1,8 +1,67 @@
 import pandas as pd
 import numpy as np
+from datetime import timedelta
 
 
+
+# обработка данных с счетчиков наработки
+def motohours_counter_procurement():
+  motohours_counter_raw_data = pd.read_csv('plan_toir_project/temp_files/785С_motohours.csv', decimal=",")
+  motohours_counter_raw_data['datetime_raw'] = motohours_counter_raw_data['Дата'] +"/"+ motohours_counter_raw_data['Момент измерений']
+  motohours_counter_raw_data['datetime_raw'] = pd.to_datetime(motohours_counter_raw_data['datetime_raw'], format='%Y-%m-%d/%H:%M:%S')
+
+
+  motohours_counter_raw_data = motohours_counter_raw_data.loc[motohours_counter_raw_data['ЕдиницаИзмерПризнака']=='МТЧ']
+  motohours_counter_raw_data.drop_duplicates(subset=['Документ измерений'], inplace=True)
+  # получаем список уникальных ЕО в выборке
+  eo_list = list(set(motohours_counter_raw_data['Единица оборудования']))
+  # итерируемся по списку ЕО
+  result_data = []
+  i=0
+  for eo_code in eo_list:
+    i=i+1
+    print("eo: ", i, " из ", len(eo_list))
+    motohours_counter_raw_data_subset = motohours_counter_raw_data.loc[motohours_counter_raw_data['Единица оборудования']==eo_code]
+    # сортируем по datetime
+    motohours_counter_raw_data_subset = motohours_counter_raw_data_subset.copy()
+    motohours_counter_raw_data_subset.sort_values(['datetime_raw'], inplace=True, ascending=False)
+    # получаем строку с минимальной датой. Это старт для этой выборки
+    eo_motohour_eirliest_row = motohours_counter_raw_data_subset.iloc[motohours_counter_raw_data_subset["datetime_raw"].argmin()]
+    # print(eo_motohour_eirliest_row)
+    eo_subset_start_datetime = eo_motohour_eirliest_row['datetime_raw']
+    eo_subset_start_counter = eo_motohour_eirliest_row['Показания счетчика']
+    # print(eo_subset_start_datetime, eo_subset_start_counter)
+    # итерируемся по записям. и считаем дельту в datetime и дельту наработки
+    # print(motohours_counter_raw_data_subset.info())
+    # переименовываем колонки 
+    motohours_counter_raw_data_subset = motohours_counter_raw_data_subset.rename(columns={"Единица оборудования":"eo_code", "Показания счетчика":"counter_current"})
+    for row in motohours_counter_raw_data_subset.itertuples():
+      temp_dict = {}
+      eo_code = getattr(row, "eo_code")
+      date_time = getattr(row, "datetime_raw")
+      counter_current = getattr(row, "counter_current")
+      time_delta = (date_time - eo_subset_start_datetime).total_seconds()/(60*60)
+      counter_delta = counter_current - eo_subset_start_counter
+      motohour_coef = time_delta / counter_delta
+      temp_dict['head_eo_model_id'] = 65
+      temp_dict['Самосвалы CAT 785C'] = 'Самосвалы CAT 785C'
+      temp_dict['eo_code'] = eo_code
+      temp_dict['counter_current'] = counter_current
+      temp_dict['motohour_coef'] = motohour_coef
+      result_data.append(temp_dict)
   
+  counter_data_df = pd.DataFrame(result_data)
+  counter_data_df.to_csv('plan_toir_project/temp_files/counter_data.csv')
+
+      
+    
+    
+  # print(motohours_counter_raw_data.info())
+  # print(motohours_counter_raw_data.head())
+  head_eo_model_id = 65
+  head_eo_model_descr = 'Самосвалы CAT 785C'
+  
+motohours_counter_procurement()  
 
 def create_component_overhaul_schedule():
   interval_between_overhaul_data_df = pd.read_csv('plan_toir_project/data_files/interval_between_overhaul_data.csv')
@@ -135,4 +194,4 @@ def assign_overhaul_cost():
   eo_data.to_csv('plan_toir_project/data_files/eo_list_update.csv', index = False, decimal = ',')  
 
   
-assign_overhaul_cost()
+# assign_overhaul_cost()
