@@ -38,4 +38,4 @@ def upload_file(file_path, file_name):
     print('не получилось upload_file ', file_name, " Ошибка: ", e)
 
 
-# upload_file('temp_files/full_eo_list_actual.csv', 'full_eo_list_actual.csv')
+# upload_file('plan_toir_project/temp_files/full_eo_list_actual.csv', 'full_eo_list_actual.csv')

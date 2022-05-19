@@ -16,7 +16,7 @@ def get_eo_data():
     
   # оставляем строки, у которых eo_model_id - это число
   eo_list  = full_eo_list_actual.loc[~full_eo_list_actual["eo_model_id"].isin(['no_data', 'Консервация', 'Списание'])]
-  eo_list = eo_list.loc[~full_eo_list_actual["level_1_description"].isin(['Сухой Лог'])]
+  eo_list = eo_list.loc[~full_eo_list_actual["be_description"].isin(['Сухой Лог'])]
   
   head_tehmesto_df = eo_list.dropna(subset = ['teh_mesto'])
   
@@ -26,19 +26,19 @@ def get_eo_data():
   head_node_eo_list = full_eo_list_actual.loc[full_eo_list_actual['teh_mesto'].isin(head_tehmesto_list)]
   
   # отбираем колонки
-  head_node_eo_list = head_node_eo_list.loc[:, ['level_1_description', 'eo_main_class_id',	'eo_main_class_descr','eo_class_code', 'eo_class_description','constr_type', 'eo_model_id', 'eo_model_name','head_eo_model_id','head_eo_model_descr','component_class_id','component_class_descr', 'eo_description', 'eo_code', 'teh_mesto', 'teh_mesto_description', 'level_upper', 'sap_operation_status', 'operation_start_date', 'operation_finish_date','strategy_id', 'head_type']]
+  head_node_eo_list = head_node_eo_list.loc[:, ['be_description',	'be_code', 'eo_main_class_id',	'eo_main_class_descr','eo_class_code', 'eo_class_description','constr_type', 'eo_model_id', 'eo_model_name','head_eo_model_id','head_eo_model_descr','component_class_id','component_class_descr', 'eo_description', 'eo_code', 'teh_mesto', 'teh_mesto_description', 'level_upper', 'sap_operation_status', 'operation_start_date', 'operation_finish_date','strategy_id', 'head_type']]
 
   # убираем строки с пустыми строками в head_eo_model_id
   head_node_eo_list = head_node_eo_list.dropna(subset = ['head_eo_model_id'])
   print(len(head_node_eo_list))
   # сортируем 
-  head_node_eo_list.sort_values(['teh_mesto', 'level_1_description', 'eo_class_code', 'head_eo_model_descr'], inplace=True)
+  head_node_eo_list.sort_values(['teh_mesto', 'be_description', 'eo_class_code', 'head_eo_model_descr'], inplace=True)
   
 
-  head_node_eo_list['level_1_description'] = head_node_eo_list['level_1_description'].astype("category")
+  head_node_eo_list['be_description'] = head_node_eo_list['be_description'].astype("category")
 
 
-  level_1_be = list(head_node_eo_list['level_1_description'].cat.categories)
+  level_1_be = list(head_node_eo_list['be_description'].cat.categories)
   
   
   head_node_eo_list.to_csv('temp_files/eo_list.csv', index = False)

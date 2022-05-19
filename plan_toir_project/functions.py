@@ -17,8 +17,10 @@ def create_component_overhaul_schedule():
   interval_between_overhaul_data_df['eo_main_class_id'] = interval_between_overhaul_data_df['eo_main_class_id'].replace(np.nan, 0)
   
   interval_between_overhaul_data_df['head_eo_model_id'] = interval_between_overhaul_data_df['head_eo_model_id'].replace(np.nan, 0)
+  interval_between_overhaul_data_df['be_code'] = interval_between_overhaul_data_df['be_code'].replace(np.nan, 0)
   
-  # interval_between_overhaul_data_df.to_csv('plan_toir_project/temp_files/interval_between_overhaul_data_df.csv')
+  
+  interval_between_overhaul_data_df.to_csv('plan_toir_project/temp_files/interval_between_overhaul_data_df.csv')
   # получаем файл eo_list
   eo_data = pd.read_csv('plan_toir_project/data_files/eo_list.csv')
   
@@ -35,50 +37,79 @@ def create_component_overhaul_schedule():
     except Exception as e:
       print("нет значения в поле interval_between_overhaul в строке ", getattr(row, 'Index')+1, e)
       continue
+      
     
-       
-    # получаем идентификатор класса компонента. В нашем случае - Двигателя внутреннего сгорания
-    component_class_id = getattr(row, "component_class_id")
-    # print("component_class_id ", component_class_id)
-    # получаем из eo_data строки с фильтрами по полям component_class_id и eo_class_code
-    # print("до фильтрации по component_class_id: ", len(eo_data))
     print("кол-во записей в исходной таблице: ", len(eo_data))
+    component_class_id = getattr(row, "component_class_id")
+    # сначала фильтруем все записи по component_class_id
     eo_data_filtered = eo_data.loc[eo_data['component_class_id']==component_class_id]
-    eo_data_filtered.to_csv('plan_toir_project/temp_files/eo_data_filtered_component_class_id_DVS.csv')
-    print("кол-во записей с component_class_id - ДВС: ", len(eo_data_filtered))
+    print("кол-во записей с component_class_id: ", len(eo_data_filtered))
+
+    be_code = getattr(row, "be_code")
+    # если be_code ненулевой, то сужаем выборку
+    if be_code!=0:
+      eo_data_filtered = eo_data_filtered.loc[eo_data_filtered['be_code']==be_code]
+    
+    # Определяем по какой колонке будем фильтровать таблицу
+    # если есть нижестоящий класс, то фильтруем по нему и другие вышестоящие классы игнорируем
+
+    head_eo_model_id = getattr(row, "head_eo_model_id")
+    filter_column_name = ""
+    filtering_value = 0
+    if head_eo_model_id !=0:
+      filter_column_name = "head_eo_model_id"
+      filtering_value = head_eo_model_id
+    else:
+      eo_main_class_id = getattr(row, "eo_main_class_id")
+      if eo_main_class_id != 0:
+        filter_column_name = "eo_main_class_id"
+        filtering_value = eo_main_class_id
+      # если везде нули то записываем ранее полученное значение eo_data_filtered и уходим на следующую итериацию цикла
+      else:
+        eo_data_filtered_indexes = eo_data_filtered.index.values
+        print('длина списка индексов: ', len(eo_data_filtered_indexes))
+        eo_data.loc[eo_data_filtered_indexes, ['interval_between_overhaul']] = interval_between_overhaul
+        continue
+    print("filter_column_name: ", filter_column_name)
+    print("filtering_value: ", filtering_value)
+    # фильтруем по определенному имени колонки
+    eo_data_filtered = eo_data_filtered.loc[eo_data_filtered[filter_column_name]==filtering_value]    
+    
+    eo_data_filtered_indexes = eo_data_filtered.index.values
+    print('длина списка индексов: ', len(eo_data_filtered_indexes))
+    eo_data.loc[eo_data_filtered_indexes, ['interval_between_overhaul']] = interval_between_overhaul
+    
     # записываем для всех значений component_class_id
     # eo_data_filtered_indexes = eo_data_filtered.index.values
     # print("interval_between_overhaul: ", interval_between_overhaul)
     # eo_data.loc[eo_data_filtered_indexes, ['interval_between_overhaul']] = interval_between_overhaul
     
     # eo_data.to_csv('plan_toir_project/data_files/eo_data_update_after_component_class_id.csv')
-    # Движемся от большего класса к меньшему. 
-    eo_main_class_id = getattr(row, "eo_main_class_id")
-    print("eo_main_class_id: ", eo_main_class_id)
-    # eo_main_class_id - это текст. Поэтому пустые ячейки  - это нули. Если не ноль, значит применяем 
-    if eo_main_class_id != 0:
-      # print("до фильтрации по eo_main_class_id: ", len(eo_data_filtered))
-      eo_data_filtered = eo_data_filtered.loc[eo_data_filtered['eo_main_class_id']==eo_main_class_id]
-      eo_data_filtered.to_csv('plan_toir_project/temp_files/eo_data_filtered_eo_main_class_id.csv')
-      
-      print("после фильтрации по eo_main_class_id: ", len(eo_data_filtered))
-      # eo_data_filtered_indexes = eo_data_filtered.index.values
-      # print("interval_between_overhaul: ", interval_between_overhaul)
-      # eo_data.loc[eo_data_filtered_indexes, ['interval_between_overhaul']] = interval_between_overhaul
-    # если в ячейке eo_main_class_id пусто, то пропускаем строку
-    else:
-      eo_data_filtered_indexes = eo_data_filtered.index.values
-      print('длина списка индексов: ', len(eo_data_filtered_indexes))
-      eo_data.loc[eo_data_filtered_indexes, ['interval_between_overhaul']] = interval_between_overhaul
-      continue
 
-    # head_eo_model_id = getattr(row, "head_eo_model_id")
-    # if head_eo_model_id >0:
-    #   print("есть head_eo_model_id. Применяем это значение")
-    #   eo_data_filtered = eo_data_filtered.loc[eo_data_filtered['head_eo_model_id']==head_eo_model_id]
-    eo_data_filtered_indexes = eo_data_filtered.index.values
-    print('длина списка индексов: ', len(eo_data_filtered_indexes))
-    eo_data.loc[eo_data_filtered_indexes, ['interval_between_overhaul']] = interval_between_overhaul
+    
+    # print("eo_main_class_id: ", eo_main_class_id)
+    # eo_main_class_id - это текст. Поэтому пустые ячейки  - это нули. Если не ноль, значит применяем 
+    # if eo_main_class_id != 0:
+    #   # print("до фильтрации по eo_main_class_id: ", len(eo_data_filtered))
+    #   eo_data_filtered = eo_data_filtered.loc[eo_data_filtered['eo_main_class_id']==eo_main_class_id]   
+    #   print("после фильтрации по eo_main_class_id: ", len(eo_data_filtered))
+    #   # eo_data_filtered_indexes = eo_data_filtered.index.values
+    #   # print("interval_between_overhaul: ", interval_between_overhaul)
+    #   # eo_data.loc[eo_data_filtered_indexes, ['interval_between_overhaul']] = interval_between_overhaul
+    # # если в ячейке eo_main_class_id пусто, то пропускаем строку
+    # else:
+    #   eo_data_filtered_indexes = eo_data_filtered.index.values
+    #   print('длина списка индексов: ', len(eo_data_filtered_indexes))
+    #   eo_data.loc[eo_data_filtered_indexes, ['interval_between_overhaul']] = interval_between_overhaul
+    #   continue
+
+    # # head_eo_model_id = getattr(row, "head_eo_model_id")
+    # # if head_eo_model_id >0:
+    # #   print("есть head_eo_model_id. Применяем это значение")
+    # #   eo_data_filtered = eo_data_filtered.loc[eo_data_filtered['head_eo_model_id']==head_eo_model_id]
+    # eo_data_filtered_indexes = eo_data_filtered.index.values
+    # print('длина списка индексов: ', len(eo_data_filtered_indexes))
+    # eo_data.loc[eo_data_filtered_indexes, ['interval_between_overhaul']] = interval_between_overhaul
 
   eo_data.to_csv('plan_toir_project/data_files/eo_list_update.csv', index = False, decimal = ',')  
     
