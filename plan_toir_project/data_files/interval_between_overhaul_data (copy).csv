@@ -1,3 +1,4 @@
 component_class_id,component_class_descr,eo_main_class_id,eo_class_description,head_eo_model_id,head_eo_model_descr,interval_between_overhaul
 1,ДВС,,,,,15000
 1,ДВС,E01_01,Самосвалы карьерные,,,20000
+1,ДВС,E01_01,Самосвалы карьерные,65,Самосвалы CAT 785C,18000
